@@ -1,0 +1,7 @@
+{
+    "Producers": [{
+        "addr": "cardano-relay.cardano.svc.cluster.local",
+        "port": 3001,
+        "valency": 2
+    }]
+}

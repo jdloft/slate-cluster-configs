@@ -1,0 +1,33 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: alert-config
+  labels:
+    alertmanagerConfig: prometheus
+spec:
+  route:
+    group_by: ['job']
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 12h
+    receiver: 'notify17'
+    routes:
+    - match:
+        alertname: Watchdog
+        receiver: 'null'
+    - match:
+        alertname: DeadmansSwitch
+        receiver: 'dms'
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 5m
+  receivers:
+  - name: 'null'
+  - name: 'notify17'
+    webhook_configs:
+    - url: 'https://hook.notify17.net/api/template/TUW-IhZQEMrmzh5xJ4Dzi1e4zvP6oY6AZuyme30jLCM'
+  - name: 'dms'
+    webhook_configs:
+    - url: 'https://nosnch.in/95cba2b676'
+  templates:
+  - '/etc/alertmanager/config/*.tmpl'

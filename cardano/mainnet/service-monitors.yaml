@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: cardano-relay
+    release: prometheus-operator
+  name: cardano-relay
+  namespace: monitoring
+spec:
+  endpoints:
+  - port: prometheus
+    interval: 5s
+  jobLabel: cardano-relay
+  namespaceSelector:
+    matchNames:
+    - cardano
+  selector:
+    matchLabels:
+      app: cardano-relay
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: cardano-bp
+    release: prometheus-operator
+  name: cardano-bp
+  namespace: monitoring
+spec:
+  endpoints:
+  - port: prometheus
+    interval: 5s
+  jobLabel: cardano-bp
+  namespaceSelector:
+    matchNames:
+    - cardano
+  selector:
+    matchLabels:
+      app: cardano-bp

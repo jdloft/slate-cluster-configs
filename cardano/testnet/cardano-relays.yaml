@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cardano-relay
+  namespace: cardano-testnet
+  labels:
+    app: cardano-relay
+spec:
+  ports:
+  - name: node
+    port: 3001
+    targetPort: node
+  - name: prometheus
+    port: 12798
+    targetPort: prometheus
+  selector:
+    app: cardano-relay
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cardano-relay
+  namespace: cardano-testnet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cardano-relay
+  serviceName: cardano-relay
+  template:
+    metadata:
+      labels:
+        app: cardano-relay
+    spec:
+      # affinity:
+      #   podAntiAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #     - labelSelector:
+      #         matchExpressions:
+      #         - key: app
+      #           operator: In
+      #           values:
+      #           - cardano-bp
+      #       topologyKey: "kubernetes.io/hostname"
+      initContainers:
+        - name: init-db
+          image: gcr.io/cardano-slate/cardano-node:1.25.1
+          command:
+          - sh
+          - "-c"
+          - |
+            echo "Creating db directory"
+            mkdir -p /db/db
+          volumeMounts:
+          - name: db
+            mountPath: "/db"
+        - name: init-genesis
+          image: alpine
+          command:
+          - sh
+          - "-c"
+          - |
+            [ -e /genesis/testnet-byron-genesis.json ] || wget -P /genesis https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/testnet-byron-genesis.json
+            [ -e /genesis/testnet-shelley-genesis.json ] || wget -P /genesis https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/testnet-shelley-genesis.json
+          volumeMounts:
+            - name: genesis
+              mountPath: "/genesis"
+      containers:
+      - name: node
+        image: gcr.io/cardano-slate/cardano-node:1.25.1
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "1.5"
+        command: ["cardano-node"]
+        args: [
+          "run",
+          "--topology=/config/topology.json",
+          "--database-path=/db/db",
+          "--socket-path=/socket/node.socket",
+          "--host-addr=0.0.0.0",
+          "--port=3001",
+          "--config=/config/config.json"
+        ]
+        env:
+        - name: CARDANO_NODE_SOCKET_PATH
+          value: "/socket/node.socket"
+        volumeMounts:
+        - name: config
+          mountPath: "/config"
+        - name: db
+          mountPath: "/db"
+        - name: genesis
+          mountPath: "/genesis"
+        - name: socket
+          mountPath: "/socket"
+        ports:
+        - name: node
+          containerPort: 3001
+        - name: prometheus
+          containerPort: 12798
+      volumes:
+      - name: config
+        configMap:
+          name: cardano-config
+          items:
+          - key: "config.json"
+            path: "config.json"
+          - key: "topology-relays.json"
+            path: "topology.json"
+      - name: socket
+        emptyDir: {}
+      imagePullSecrets:
+        - name: regauth
+  volumeClaimTemplates:
+  - metadata:
+      name: db
+      namespace: cardano-testnet
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 30Gi
+  - metadata:
+      name: genesis
+      namespace: cardano
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Mi
