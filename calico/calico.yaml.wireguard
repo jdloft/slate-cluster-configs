@@ -1,16 +1,11 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: calico-system
----
 # Source: calico/templates/calico-config.yaml
 # This ConfigMap is used to configure a self-hosted Calico installation.
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: calico-config
-  namespace: calico-system
+  namespace: kube-system
 data:
   # Typha is disabled.
   typha_service_name: "none"
@@ -45,6 +40,8 @@ data:
           "kubernetes": {
               "kubeconfig": "__KUBECONFIG_FILEPATH__"
           },
+          # MODIFIED
+          # use IP forwarding for traefik
           "container_settings": {
               "allow_ip_forwarding": true
           }
@@ -3336,7 +3333,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: calico-kube-controllers
-  namespace: calico-system
+  namespace: kube-system
 ---
 
 ---
@@ -3492,7 +3489,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: calico-node
-  namespace: calico-system
+  namespace: kube-system
 
 ---
 # Source: calico/templates/calico-node.yaml
@@ -3503,7 +3500,7 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: calico-node
-  namespace: calico-system
+  namespace: kube-system
   labels:
     k8s-app: calico-node
 spec:
@@ -3650,6 +3647,10 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: "autodetect"
+            # MODIFIED
+            # use wg0 interface for IP detection
+            - name: IP_AUTODETECTION_METHOD
+              value: "interface=wg0"
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
@@ -3791,7 +3792,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: calico-node
-  namespace: calico-system
+  namespace: kube-system
 
 ---
 # Source: calico/templates/calico-kube-controllers.yaml
@@ -3800,7 +3801,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: calico-kube-controllers
-  namespace: calico-system
+  namespace: kube-system
   labels:
     k8s-app: calico-kube-controllers
 spec:
@@ -3814,7 +3815,7 @@ spec:
   template:
     metadata:
       name: calico-kube-controllers
-      namespace: calico-system
+      namespace: kube-system
       labels:
         k8s-app: calico-kube-controllers
     spec:
@@ -3849,7 +3850,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: calico-kube-controllers
-  namespace: calico-system
+  namespace: kube-system
 
 ---
 
@@ -3859,7 +3860,7 @@ apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: calico-kube-controllers
-  namespace: calico-system
+  namespace: kube-system
   labels:
     k8s-app: calico-kube-controllers
 spec:
