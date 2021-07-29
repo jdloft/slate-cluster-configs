@@ -190,7 +190,7 @@ spec:
 #    osd: rook-ceph-osd-priority-class
 #    mgr: rook-ceph-mgr-priority-class
   storage: # cluster level storage configuration and selection
-    useAllNodes: false
+    useAllNodes: true
     useAllDevices: true
     #deviceFilter:
     config:
@@ -203,18 +203,10 @@ spec:
 # Individual nodes and their config can be specified as well, but 'useAllNodes' above must be set to false. Then, only the named
 # nodes below will be used as storage resources.  Each node's 'name' field should match their 'kubernetes.io/hostname' label.
     nodes:
-    - name: "vmi521386.contaboserver.net"
-      devices:
-      - name: "sda3"
-    - name: "vmi521387.contaboserver.net"
-      devices:
-      - name: "sda3"
-    - name: "vmi525995.contaboserver.net"
-      devices:
-      - name: "sda3"
-    - name: "vmi539689.contaboserver.net"
-      devices:
-      - name: "sda3"
+    # - name: "hostname"
+    #   devices:
+    #   - name: "sda3"
+
 #    - name: "172.17.4.201"
 #      devices: # specific devices to use for storage can be specified for each node
 #      - name: "sdb"
