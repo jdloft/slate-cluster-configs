@@ -4,41 +4,15 @@ metadata:
   annotations:
     meta.helm.sh/release-name: prometheus
     meta.helm.sh/release-namespace: default
-  creationTimestamp: "2021-03-11T09:11:16Z"
-  generation: 1
+    prometheus-operator-validated: "true"
   labels:
     app: prometheus
     app.kubernetes.io/managed-by: Helm
     chart: kube-prometheus-stack-14.0.1
     heritage: Helm
     release: prometheus
-  managedFields:
-  - apiVersion: monitoring.coreos.com/v1
-    fieldsType: FieldsV1
-    fieldsV1:
-      f:metadata:
-        f:annotations:
-          .: {}
-          f:meta.helm.sh/release-name: {}
-          f:meta.helm.sh/release-namespace: {}
-        f:labels:
-          .: {}
-          f:app: {}
-          f:app.kubernetes.io/managed-by: {}
-          f:chart: {}
-          f:heritage: {}
-          f:release: {}
-      f:spec:
-        .: {}
-        f:groups: {}
-    manager: Go-http-client
-    operation: Update
-    time: "2021-03-11T09:11:16Z"
   name: prometheus-etcd
   namespace: prometheus
-  resourceVersion: "7654472"
-  selfLink: /apis/monitoring.coreos.com/v1/namespaces/prometheus/prometheusrules/prometheus-etcd
-  uid: b5a2c811-fba3-4a43-8c9a-d0413deaa9e9
 spec:
   groups:
   - name: etcd
@@ -108,7 +82,7 @@ spec:
           }} is taking {{ $value }}s on etcd instance {{ $labels.instance }}.'
       expr: |-
         histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~".*etcd.*"}[5m]))
-        > 0.3
+        > 1.0
       for: 10m
       labels:
         severity: warning
