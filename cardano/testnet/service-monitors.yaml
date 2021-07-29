@@ -11,6 +11,9 @@ spec:
   - port: prometheus
     path: /metrics
     interval: 5s
+  - port: prometheus-2
+    path: /metrics
+    interval: 1m
   jobLabel: cardano-testnet-relay
   namespaceSelector:
     matchNames:
@@ -33,6 +36,9 @@ spec:
   - port: prometheus
     path: /metrics
     interval: 5s
+  - port: prometheus-2
+    path: /metrics
+    interval: 1m
   jobLabel: cardano-testnet-bp
   namespaceSelector:
     matchNames:

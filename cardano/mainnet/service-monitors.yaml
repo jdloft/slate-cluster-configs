@@ -3,13 +3,17 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: cardano-relay
-    release: prometheus-operator
+    release: prometheus
   name: cardano-relay
-  namespace: monitoring
+  namespace: cardano
 spec:
   endpoints:
   - port: prometheus
+    path: /metrics
     interval: 5s
+  - port: prometheus-2
+    path: /metrics
+    interval: 1m
   jobLabel: cardano-relay
   namespaceSelector:
     matchNames:
@@ -24,13 +28,17 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: cardano-bp
-    release: prometheus-operator
+    release: prometheus
   name: cardano-bp
-  namespace: monitoring
+  namespace: cardano
 spec:
   endpoints:
   - port: prometheus
+    path: /metrics
     interval: 5s
+  - port: prometheus-2
+    path: /metrics
+    interval: 1m
   jobLabel: cardano-bp
   namespaceSelector:
     matchNames:

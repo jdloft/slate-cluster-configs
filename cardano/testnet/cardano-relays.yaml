@@ -13,6 +13,9 @@ spec:
   - name: prometheus
     port: 12798
     targetPort: prometheus
+  - name: prometheus-2
+    port: 9102
+    targetPort: prometheus-2
   selector:
     app: cardano-relay
 
@@ -23,7 +26,7 @@ metadata:
   name: cardano-relay
   namespace: cardano-testnet
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: cardano-relay
@@ -103,6 +106,33 @@ spec:
           containerPort: 3001
         - name: prometheus
           containerPort: 12798
+      - name: statsd
+        image: docker.io/prom/statsd-exporter:latest
+        ports:
+        - name: prometheus-2
+          containerPort: 9102
+      - name: custom-metrics
+        image: gcr.io/cardano-slate/cardano-node-metrics:1.25.1-2
+        env:
+        - name: CARDANO_NODE_SOCKET_PATH
+          value: "/socket/node.socket"
+        - name: CARDANO_CONFIG
+          value: "/config/config.json"
+        - name: STATSD_HOST
+          value: "localhost"
+        - name: STATSD_PORT
+          value: "9125"
+        - name: OPCERT
+          value: ""
+        - name: MAGIC
+          value: "--testnet-magic 1097911063"
+        volumeMounts:
+        - name: config
+          mountPath: "/config"
+        - name: genesis
+          mountPath: "/genesis"
+        - name: socket
+          mountPath: "/socket"
       volumes:
       - name: config
         configMap:

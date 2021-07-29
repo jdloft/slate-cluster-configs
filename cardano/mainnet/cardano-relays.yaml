@@ -13,25 +13,11 @@ spec:
   - name: prometheus
     port: 12798
     targetPort: prometheus
+  - name: prometheus-2
+    port: 9102
+    targetPort: prometheus-2
   selector:
     app: cardano-relay
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: cardano-relay-public
-  namespace: cardano
-  labels:
-    app: cardano-relay
-spec:
-  ports:
-  - name: node
-    port: 3001
-    targetPort: node
-  selector:
-    app: cardano-relay
-  type: LoadBalancer
 
 ---
 apiVersion: apps/v1
@@ -52,7 +38,7 @@ spec:
     spec:
       initContainers:
         - name: init-db
-          image: gcr.io/cardano-slate/cardano-node:1.20.0
+          image: gcr.io/cardano-slate/cardano-node:1.25.1
           command:
           - sh
           - "-c"
@@ -75,14 +61,14 @@ spec:
               mountPath: "/genesis"
       containers:
       - name: node
-        image: gcr.io/cardano-slate/cardano-node:1.20.0
+        image: gcr.io/cardano-slate/cardano-node:1.25.1
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "0.5"
+            memory: "2Gi"
+            cpu: "1"
           limits:
-            memory: "3Gi"
-            cpu: "1.5"
+            memory: "4Gi"
+            cpu: "3"
         # livenessProbe:
         #   exec:
         #     command:
@@ -141,6 +127,33 @@ spec:
       #     mountPath: "/socket"
       #   - name: topology-logs
       #     mountPath: "/logs"
+      - name: statsd
+        image: docker.io/prom/statsd-exporter:latest
+        ports:
+        - name: prometheus-2
+          containerPort: 9102
+      - name: custom-metrics
+        image: gcr.io/cardano-slate/cardano-node-metrics:1.25.1-2
+        env:
+        - name: CARDANO_NODE_SOCKET_PATH
+          value: "/socket/node.socket"
+        - name: CARDANO_CONFIG
+          value: "/config/config.json"
+        - name: STATSD_HOST
+          value: "localhost"
+        - name: STATSD_PORT
+          value: "9125"
+        - name: OPCERT
+          value: ""
+        - name: MAGIC
+          value: "--mainnet"
+        volumeMounts:
+        - name: config
+          mountPath: "/config"
+        - name: genesis
+          mountPath: "/genesis"
+        - name: socket
+          mountPath: "/socket"
       volumes:
       - name: config
         configMap:
@@ -154,8 +167,8 @@ spec:
         emptyDir: {}
       - name: topology-logs
         emptyDir: {}
-      # imagePullSecrets:
-      #   - name: regcred
+      imagePullSecrets:
+        - name: regauth
   volumeClaimTemplates:
   - metadata:
       name: db
@@ -164,7 +177,7 @@ spec:
       accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: 24Gi
+          storage: 20Gi
   - metadata:
       name: genesis
       namespace: cardano
